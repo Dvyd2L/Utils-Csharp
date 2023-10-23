@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace Utils.Classes;
 public static class MethodsExtension
@@ -67,6 +68,31 @@ public static class MethodsExtension
         //    return result;
         //};
         #endregion
+    }
+
+    /// <summary>
+    /// Método de extensión para reflejar un objeto en un diccionario que contiene los nombres y 
+    /// valores de todas sus propiedades públicas. Este método incluye una verificación para 
+    /// asegurarse de que el objeto no sea null antes de intentar reflejarlo. También se ha 
+    /// especificado BindingFlags.Public | BindingFlags.Instance en la llamada a GetProperties para 
+    /// asegurar que solo se obtengan las propiedades públicas de instancia.
+    /// </summary>
+    /// <typeparam name="T">El tipo del objeto a reflejar.</typeparam>
+    /// <param name="obj">El objeto a reflejar.</param>
+    /// <returns>Un diccionario que contiene los nombres y valores de todas las propiedades públicas del objeto.</returns>
+    /// <exception cref="ArgumentNullException">Se lanza si el objeto es null.</exception>
+    public static IDictionary<string, object?> Reflect<T>(this T obj)
+        where T : notnull
+    {
+        if (obj is null) throw new ArgumentNullException(nameof(obj));
+
+        Type type = obj.GetType();
+        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        return properties.ToDictionary(
+            prop => prop.Name,
+            prop => prop.GetValue(obj)
+        );
     }
     #endregion
 }
