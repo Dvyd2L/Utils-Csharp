@@ -1,8 +1,8 @@
 ﻿namespace Utils.Interfaces;
 
-public interface IDeconstructable<T>
+public interface IDeconstructible<T>
 {
-    T Deconstruct();
+    void Deconstruct(out T value);
 }
 
 public interface IDeconstruct
