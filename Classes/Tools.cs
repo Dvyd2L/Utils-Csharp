@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Utils.Interfaces;
 
-namespace Utils;
+namespace Utils.Classes;
 
 public static class Tools
 {

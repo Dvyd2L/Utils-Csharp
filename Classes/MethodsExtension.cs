@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Utils;
+namespace Utils.Classes;
 public static class MethodsExtension
 {
     #region Strings
