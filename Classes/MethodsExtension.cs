@@ -43,6 +43,9 @@ public static class MethodsExtension
     /// se ejecuta la función original y se almacena el resultado en caché. 
     /// Las siguientes veces que se llama a la nueva función con el mismo argumento, 
     /// se devuelve el resultado almacenado en caché en lugar de ejecutar la función original.
+    ///  Este enfoque garantiza que func solo se llamará una vez por argumento, pero no es seguro 
+    ///  para subprocesos. Si tu método puede ser llamado desde múltiples hilos, necesitarías 
+    ///  agregar bloqueo para evitar condiciones de carrera.
     /// </summary>
     /// <typeparam name="T">Representa el tipo del argumento de entrada de la función original. 
     /// Incluye una restricción de tipo que significa que T no puede ser un tipo nulo.</typeparam>
@@ -52,22 +55,41 @@ public static class MethodsExtension
     public static Func<T, TResult> Memoize<T, TResult>(this Func<T, TResult> func)
         where T : notnull
     {
+        Dictionary<T, TResult> cache = new();
+
+        return arg =>
+        {
+            if (cache.TryGetValue(arg, out TResult? result))
+                return result;
+
+            result = func(arg);
+            cache[arg] = result;
+            return result;
+        };
+    }
+
+    /// <summary>
+    /// Este método de extensión acepta una función y devuelve una nueva función que 
+    /// almacena en caché los resultados de la función original. 
+    /// La primera vez que se llama a la nueva función con un argumento determinado, 
+    /// se ejecuta la función original y se almacena el resultado en caché. 
+    /// Las siguientes veces que se llama a la nueva función con el mismo argumento, 
+    /// se devuelve el resultado almacenado en caché en lugar de ejecutar la función original.
+    ///  Esta es una buena opción si tu método puede ser llamado simultáneamente desde múltiples 
+    ///  hilos, ya que ConcurrentDictionary está diseñado para manejar la concurrencia de manera segura. 
+    ///  Sin embargo, GetOrAdd podría ejecutar la función func más de una vez para el mismo argumento 
+    ///  si se llama simultáneamente desde múltiples hilos.
+    /// </summary>
+    /// <typeparam name="T">Representa el tipo del argumento de entrada de la función original. 
+    /// Incluye una restricción de tipo que significa que T no puede ser un tipo nulo.</typeparam>
+    /// <typeparam name="TResult">Representa el tipo del resultado devuelto por la función original.</typeparam>
+    /// <param name="func">Funcíon que vamos a cachear</param>
+    /// <returns>El resultado devuelto por la función que hemos cacheado</returns>
+    public static Func<T, TResult> ConcurrentMemoize<T, TResult>(this Func<T, TResult> func)
+        where T : notnull
+    {
         ConcurrentDictionary<T, TResult> cache = new();
         return (arg) => cache.GetOrAdd(arg, func);
-
-        #region OtraForma
-        //Dictionary<T, TResult> cache = new();
-
-        //return arg =>
-        //{
-        //    if (cache.TryGetValue(arg, out TResult? result))
-        //        return result;
-
-        //    result = func(arg);
-        //    cache[arg] = result;
-        //    return result;
-        //};
-        #endregion
     }
 
     /// <summary>
